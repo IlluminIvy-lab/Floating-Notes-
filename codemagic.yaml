@@ -8,7 +8,7 @@ workflows:
       java: 17
 
     scripts:
-      - name: Verify environment
+      - name: Show environment
         script: |
           node -v
           java -version
