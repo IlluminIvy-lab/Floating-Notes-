@@ -8,8 +8,10 @@ workflows:
       java: 17
 
     scripts:
-      - name: Verify Java version
-        script: java -version
+      - name: Verify environment
+        script: |
+          node -v
+          java -version
 
       - name: Install dependencies
         script: npm install
@@ -24,7 +26,7 @@ workflows:
         script: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug -Dorg.gradle.java.home=$JAVA_HOME
+          ./gradlew assembleDebug
 
     artifacts:
       - android/app/build/outputs/apk/debug/app-debug.apk
