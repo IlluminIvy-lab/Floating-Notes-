@@ -12,6 +12,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      # ---- Node (Capacitor requires 22+) ----
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -26,20 +27,24 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      # ---- Java (Android requires stable LTS) ----
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
+      # ---- Fix Gradle permissions ----
       - name: Make Gradle executable
         run: chmod +x android/gradlew
 
-      - name: Build APK
+      # ---- Build APK ----
+      - name: Build Android APK
         run: |
           cd android
           ./gradlew assembleDebug
 
+      # ---- Upload APK ----
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
