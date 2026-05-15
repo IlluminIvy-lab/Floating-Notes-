@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=yes"
+  />
+  <title>FloatNotes • Ivy</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+    :root {
+      --bg: #121212;
+      --card: #1e1e1e;
+      --accent: #ff8c00;
+      --text: #e0e0e0;
+      --border: #333;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    /* Sidebar handle */
+    #sidebar-handle {
+      position: fixed;
+      right: 0;
+      top: 40%;
+      width: 12px;
+      height: 120px;
+      background: rgba(255, 140, 0, 0.6);
+      border-radius: 6px 0 0 6px;
+      cursor: pointer;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 10px;
+      writing-mode: vertical-rl;
+      user-select: none;
+    }
+
+    /* Main panel */
+    #app {
+      position: fixed;
+      right: -380px;
+      top: 0;
+      width: 380px;
+      max-width: 95vw;
+      height: 100vh;
+      background: var(--card);
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.6);
+      transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #app.open {
+      right: 0;
+    }
+
+    header {
+      background: #1a1a1a;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .orange {
+      color: var(--accent);
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      user-select: none;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: black;
+      font-weight: 600;
+    }
+
+    .content {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .note {
+      background: #2a2a2a;
+      margin-bottom: 12px;
+      padding: 14px;
+      border-radius: 12px;
+      border-left: 4px solid var(--accent);
+      position: relative;
+    }
+
+    .note textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 15px;
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+      padding-right: 60px;
+      font-family: inherit;
+    }
+
+    .clipboard-item {
+      padding: 12px;
+      background: #252525;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    button {
+      background: var(--accent);
+      color: black;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    button.secondary {
+      background: #333;
+      color: var(--text);
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #333;
+      color: var(--text);
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .fab {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 56px;
+      height: 56px;
+      background: var(--accent);
+      color: black;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
+      cursor: pointer;
+      z-index: 99999;
+      user-select: none;
+    }
+
+    .empty-state {
+      opacity: 0.7;
+      font-size: 14px;
+      text-align: center;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar-handle" onclick="toggleSidebar()">NOTES</div>
+
+  <div id="app">
+    <header>
+      <h1>Float<span class="orange">Notes</span></h1>
+      <button class="secondary" onclick="toggleSidebar()">✕</button>
+    </header>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(0)">Notes</div>
+      <div class="tab" onclick="switchTab(1)">Clipboard</div>
+    </div>
+
+    <div class="content" id="notes-tab">
+      <button onclick="addNote()" style="width: 100%; margin-bottom: 16px;">
+        + New Note
+      </button>
+      <div id="notes-list"></div>
+    </div>
+
+    <div class="content" id="clipboard-tab" style="display: none;">
+      <button
+        onclick="captureClipboard()"
+        style="width: 100%; margin-bottom: 16px;"
+      >
+        📋 Add Clipboard Item
+      </button>
+      <div id="clipboard-list"></div>
+    </div>
+  </div>
+
+  <div class="fab" onclick="addNote()">+</div>
+
+  <script>
+    let currentTab = 0;
+
+    let notes =
+      JSON.parse(localStorage.getItem("floatnotes_notes")) || [];
+
+    let clipboard =
+      JSON.parse(localStorage.getItem("floatnotes_clipboard")) || [];
+
+    function saveData() {
+      localStorage.setItem(
+        "floatnotes_notes",
+        JSON.stringify(notes)
+      );
+      localStorage.setItem(
+        "floatnotes_clipboard",
+        JSON.stringify(clipboard)
+      );
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function renderNotes() {
+      const list = document.getElementById("notes-list");
+      list.innerHTML = "";
+
+      if (notes.length === 0) {
+        list.innerHTML =
+          '<div class="empty-state">No notes yet. Tap + to create one.</div>';
+        return;
+      }
+
+      notes.forEach((note, i) => {
+        const div = document.createElement("div");
+        div.className = "note";
+
+        div.innerHTML = `
+          <textarea oninput="updateNote(${i}, this.value)">${escapeHtml(note)}</textarea>
+          <button class="delete-btn" onclick="deleteNote(${i})">
+            Delete
+          </button>
+        `;
+
+        list.appendChild(div);
+      });
+    }
+
+    function renderClipboard() {
+      const list = document.getElementById("clipboard-list");
+      list.innerHTML = "";
+
+      if (clipboard.length === 0) {
+        list.innerHTML =
+          '<div class="empty-state">No clipboard items saved yet.</div>';
+        return;
+      }
+
+      clipboard.forEach((text, i) => {
+        const div = document.createElement("div");
+        div.className = "clipboard-item";
+
+        div.textContent =
+          text.length > 80
+            ? text.substring(0, 80) + "..."
+            : text;
+
+        div.onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(text);
+            alert("Copied to clipboard!");
+          } catch (err) {
+            alert("Unable to copy to clipboard.");
+          }
+        };
+
+        div.oncontextmenu = (e) => {
+          e.preventDefault();
+          if (confirm("Delete this clipboard item?")) {
+            clipboard.splice(i, 1);
+            saveData();
+            renderClipboard();
+          }
+        };
+
+        list.appendChild(div);
+      });
+    }
+
+    function addNote() {
+      notes.unshift("");
+      saveData();
+      renderNotes();
+    }
+
+    function updateNote(i, text) {
+      notes[i] = text;
+      saveData();
+    }
+
+    function deleteNote(i) {
+      if (!confirm("Delete this note?")) return;
+
+      notes.splice(i, 1);
+      saveData();
+      renderNotes();
+    }
+
+    function captureClipboard() {
+      const text = prompt("Paste text to save:");
+      if (!text) return;
+
+      clipboard.unshift(text);
+
+      if (clipboard.length > 20) {
+        clipboard.pop();
+      }
+
+      saveData();
+      renderClipboard();
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+
+      document
+        .querySelectorAll(".tab")
+        .forEach((t, i) =>
+          t.classList.toggle("active", i === tab)
+        );
+
+      document.getElementById("notes-tab").style.display =
+        tab === 0 ? "block" : "none";
+
+      document.getElementById("clipboard-tab").style.display =
+        tab === 1 ? "block" : "none";
+    }
+
+    function toggleSidebar() {
+      document
+        .getElementById("app")
+        .classList.toggle("open");
+    }
+
+    // Keyboard shortcut for desktop testing
+    document.addEventListener("keydown", (e) => {
+      if (
+        e.key === "/" &&
+        !document.getElementById("app").classList.contains("open")
+      ) {
+        toggleSidebar();
+      }
+    });
+
+    // Initial render
+    renderNotes();
+    renderClipboard();
+  </script>
+</body>
+</html>

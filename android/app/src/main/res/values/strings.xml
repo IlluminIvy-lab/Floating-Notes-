@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FloatNotes</string>
+    <string name="title_activity_main">FloatNotes</string>
+    <string name="package_name">com.ivy.floatnotes</string>
+    <string name="custom_url_scheme">com.ivy.floatnotes</string>
+</resources>
